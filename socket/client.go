@@ -143,6 +143,21 @@ func (c *Client) ReadPump() {
 
 		switch msgReq.Action {
 
+		case types.ActionPing:
+
+			c.hub.clients[c] = time.Now()
+
+			mr := &MessageResponse{
+				Action:  types.ActionPong,
+				Message: responses.NewSuccessResponse("pong"),
+			}
+			msg, err := json.Marshal(mr)
+			if err != nil {
+				log.Printf("Failed to marshal start chat ack: %s", err)
+				continue
+			}
+			c.send <- msg
+
 		case types.ActionStartChatReq:
 			// Set the client as waiting
 			c.IsWaiting = true
@@ -203,9 +218,9 @@ func (c *Client) ReadPump() {
 			log.Printf("Received ICE candidate: %s", iceCandidate.Candidate)
 
 			res := map[string]string{
-				"uId":    c.ID,
-				"candidate": iceCandidate.Candidate,
-				"sdpMid":   iceCandidate.SdpMid,
+				"uId":           c.ID,
+				"candidate":     iceCandidate.Candidate,
+				"sdpMid":        iceCandidate.SdpMid,
 				"sdpMLineIndex": iceCandidate.SdpMLineIndex,
 			}
 
@@ -304,6 +319,13 @@ func ServeWebsockets(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	if uId == "" {
 		log.Printf("[%s] uId not provided in the request", time.Now())
 		hub.ctx.AbortWithStatusJSON(http.StatusBadRequest, responses.NewErrorResponse(http.StatusBadRequest, "uId is required", nil))
+		return
+	}
+
+	existClient := hub.GetClientByID(uId)
+	if existClient != nil {
+		log.Printf("[%s] user already connected", time.Now())
+		hub.ctx.AbortWithStatusJSON(http.StatusBadRequest, responses.NewErrorResponse(http.StatusBadRequest, "user already connected", nil))
 		return
 	}
 

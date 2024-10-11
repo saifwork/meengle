@@ -8,7 +8,10 @@ const (
 	InvalidRequest                   = "the request is not valid"
 	DatabaseErrorNotConnectedMessage = "database not connected"
 
-	ActionConnected = "connected"
+	ActionPing = "ping"
+	ActionPong = "pong"
+
+	ActionConnected    = "connected"
 	ActionDisConnected = "dis_connected"
 
 	ActionOfferReq = "offer_req"
