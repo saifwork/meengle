@@ -11,6 +11,7 @@ type Config struct {
 	ServiceName string
 	ServiceHost string
 	ServicePort string
+	Version string
 }
 
 func NewConfig() *Config {
@@ -38,5 +39,10 @@ func (c *Config) initialise() {
 	if c.ServicePort = os.Getenv("SERVICE_PORT"); c.ServicePort == "" {
 		log.Println("SERVICE_PORT missed on the environment variables, setting default to '8080'")
 		c.ServicePort = "8080"
+	}
+
+	if c.ServicePort = os.Getenv("VERSION"); c.ServicePort == "" {
+		log.Println("VERSION missed on the environment variables, setting default to '1.0.0'")
+		c.ServicePort = "1.0.0"
 	}
 }
