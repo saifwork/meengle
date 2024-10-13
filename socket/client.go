@@ -141,6 +141,9 @@ func (c *Client) ReadPump() {
 			continue
 		}
 
+		log.Print("req")
+		log.Println(msgReq)
+
 		switch msgReq.Action {
 
 		case types.ActionPing:
@@ -176,21 +179,22 @@ func (c *Client) ReadPump() {
 			c.send <- msg
 
 		case types.ActionOfferRes:
+
+			print("inside offer_res")
+
 			var offer Offer
 			if err := json.Unmarshal(msgReq.Data, &offer); err != nil {
+
+				log.Println("inside offer_res err")
 				log.Println("Error parsing offer:", err)
-				continue
+				return
 			}
 			log.Printf("Received offer: %s", offer)
 
-			res := map[string]string{
-				"uId":  c.ID,
-				"sdp":  offer.OfferSDP,
-				"type": offer.Type,
-			}
-
+			remoteId := offer.ID
+			offer.ID = c.ID
 			// Call the refactored function
-			c.handleMessageResponse(types.ActionAnswerReq, res, offer.ID)
+			c.handleMessageResponse(types.ActionAnswerReq, offer, remoteId)
 
 		case types.ActionAnswerRes:
 			var answer Answer
@@ -200,14 +204,11 @@ func (c *Client) ReadPump() {
 			}
 			log.Printf("Received answer: %s", answer)
 
-			res := map[string]string{
-				"uId":    c.ID,
-				"answer": answer.AnswerSDP,
-				"type":   answer.Type,
-			}
+			remoteId := answer.ID
+			answer.ID = c.ID
 
 			// Call the refactored function
-			c.handleMessageResponse(types.ActionAnswerRec, res, answer.ID)
+			c.handleMessageResponse(types.ActionAnswerRec, answer, remoteId)
 
 		case types.ActionIceCandidateRes:
 			var iceCandidate IceCandidate
@@ -217,15 +218,11 @@ func (c *Client) ReadPump() {
 			}
 			log.Printf("Received ICE candidate: %s", iceCandidate.Candidate)
 
-			res := map[string]string{
-				"uId":           c.ID,
-				"candidate":     iceCandidate.Candidate,
-				"sdpMid":        iceCandidate.SdpMid,
-				"sdpMLineIndex": iceCandidate.SdpMLineIndex,
-			}
+			remoteId := iceCandidate.ID
+			iceCandidate.ID = c.ID
 
 			// Call the refactored function
-			c.handleMessageResponse(types.ActionIceCandidateRec, res, iceCandidate.ID)
+			c.handleMessageResponse(types.ActionIceCandidateRec, iceCandidate, remoteId)
 
 		case types.ActionDisConnected:
 
@@ -395,7 +392,7 @@ func ServeWebsockets(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	client.send <- msg
 }
 
-func (c *Client) handleMessageResponse(action string, obj interface{}, clientUID string) {
+func (c *Client) handleMessageResponse(action string, obj interface{}, remoteUid string) {
 	// Marshal the object into JSON
 	mr := &MessageResponse{
 		Action:  action,
@@ -410,7 +407,8 @@ func (c *Client) handleMessageResponse(action string, obj interface{}, clientUID
 	}
 
 	// Find the remote client by UID
-	remoteClient := c.hub.GetWaitingClientByUID(clientUID)
+	remoteClient := c.hub.GetWaitingClientByUID(remoteUid)
+
 	if remoteClient != nil {
 		// Client with the specified UID and isWaiting == true was found
 		log.Printf("Found waiting client with UID: %s", remoteClient.ID)
