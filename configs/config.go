@@ -41,7 +41,7 @@ func (c *Config) initialise() {
 		c.ServicePort = "8080"
 	}
 
-	if c.ServicePort = os.Getenv("VERSION"); c.ServicePort == "" {
+	if c.Version = os.Getenv("VERSION"); c.Version == "" {
 		log.Println("VERSION missed on the environment variables, setting default to '1.0.0'")
 		c.Version = "1.0.0"
 	}
