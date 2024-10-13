@@ -1,0 +1,8 @@
+# Ignore all files and folders
+*
+
+# Except for the .gitignore file itself
+!.gitignore
+
+
+!socket-service-binary
