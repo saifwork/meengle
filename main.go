@@ -48,6 +48,8 @@ func main() {
 }
 
 func HandleWebHookEvent(c *gin.Context) {
+
+	log.Println("initla HandleWebHookEvent log")
 	log.Println("inside HandleWebHookEvent")
 
 	// Read the body of the POST request
