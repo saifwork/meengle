@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -31,6 +30,7 @@ func main() {
 	// Setup routes
 	r.GET("/health", Healthcheck)
 	r.POST("/event", HandleWebHookEvent)
+	r.POST("/static-event", StaticHandleWebHookEvent)
 	r.GET("/ws", func(c *gin.Context) {
 		hub.SetContext(c)
 		socket.ServeWebsockets(hub, c.Writer, c.Request)
@@ -52,18 +52,8 @@ func HandleWebHookEvent(c *gin.Context) {
 	log.Println("initla HandleWebHookEvent log")
 	log.Println("inside HandleWebHookEvent")
 
-	// Read the body of the POST request
-	body, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Unable to read request body"})
-		return
-	}
-
-	// Print the body to the console (or log it)
-	fmt.Println("Received Webhook Data: ", string(body))
-
 	// Path to your script
-	scriptPath := "./bin/go_meengle.sh"
+	scriptPath := "go_meengle.sh"
 
 	// Execute the script using exec.Command
 	cmd := exec.Command("/bin/bash", scriptPath)
@@ -71,7 +61,33 @@ func HandleWebHookEvent(c *gin.Context) {
 	// Run the command and capture any output or errors
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Printf("Error running script: %v", err)
+		log.Printf("Error running script: %v", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to execute script", "details": err.Error()})
+		return
+	}
+
+	// Log the script's output
+	log.Printf("Script output: %s", output)
+
+	// Send a response back to acknowledge the webhook and script execution
+	c.JSON(http.StatusOK, gin.H{"status": "Webhook received and script executed successfully"})
+}
+
+func StaticHandleWebHookEvent(c *gin.Context) {
+
+	log.Println("initla StaticHandleWebHookEvent log")
+	log.Println("inside StaticHandleWebHookEvent")
+
+	// Path to your script
+	scriptPath := "go_meengle.sh"
+
+	// Execute the script using exec.Command
+	cmd := exec.Command("/bin/bash", scriptPath)
+
+	// Run the command and capture any output or errors
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error running script: %v", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to execute script", "details": err.Error()})
 		return
 	}
