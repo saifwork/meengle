@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/saifwork/socket-service/configs"
+	"github.com/saifwork/socket-service/responses"
 	"github.com/saifwork/socket-service/socket"
 )
 
@@ -59,18 +60,15 @@ func HandleWebHookEvent(c *gin.Context) {
 	cmd := exec.Command("/bin/bash", scriptPath)
 
 	// Run the command and capture any output or errors
-	output, err := cmd.CombinedOutput()
+	_, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("Error running script: %v", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to execute script", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, responses.NewErrorResponse(http.StatusBadRequest, err.Error(), nil))
 		return
 	}
 
-	// Log the script's output
-	log.Printf("Script output: %s", output)
-
 	// Send a response back to acknowledge the webhook and script execution
-	c.JSON(http.StatusOK, gin.H{"status": "Webhook received and script executed successfully"})
+	c.JSON(http.StatusOK, responses.NewSuccessResponse("service restarted"))
 }
 
 func StaticHandleWebHookEvent(c *gin.Context) {
@@ -85,18 +83,15 @@ func StaticHandleWebHookEvent(c *gin.Context) {
 	cmd := exec.Command("/bin/bash", scriptPath)
 
 	// Run the command and capture any output or errors
-	output, err := cmd.CombinedOutput()
+	_, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("Error running script: %v", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to execute script", "details": err.Error()})
+		c.JSON(http.StatusInternalServerError, responses.NewErrorResponse(http.StatusBadRequest, err.Error(), nil))
 		return
 	}
 
-	// Log the script's output
-	log.Printf("Script output: %s", output)
-
 	// Send a response back to acknowledge the webhook and script execution
-	c.JSON(http.StatusOK, gin.H{"status": "Webhook received and script executed successfully"})
+	c.JSON(http.StatusOK, responses.NewSuccessResponse("service restarted"))
 }
 
 func Healthcheck(c *gin.Context) {
