@@ -47,6 +47,9 @@ func main() {
 }
 
 func HandleWebHookEvent(c *gin.Context) {
+
+	log.Println("inside HandleWebHookEvent")
+
 	// Read the body of the POST request
 	body, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
