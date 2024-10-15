@@ -74,7 +74,7 @@ type IceCandidate struct {
 	ID            string `json:"uId"`
 	Candidate     string `json:"candidate"`
 	SdpMid        string `json:"sdpMid"`
-	SdpMLineIndex string `json:"sdpMLineIndex"`
+	SdpMLineIndex int    `json:"sdpMLineIndex"`
 }
 
 type ClientDisconnect struct {
