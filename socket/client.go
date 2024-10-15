@@ -211,6 +211,9 @@ func (c *Client) ReadPump() {
 			c.handleMessageResponse(types.ActionAnswerRec, answer, remoteId)
 
 		case types.ActionIceCandidateRes:
+
+			log.Printf("Inside ActionIceCandidateRes")
+
 			var iceCandidate IceCandidate
 			if err := json.Unmarshal(msgReq.Data, &iceCandidate); err != nil {
 				log.Println("Error parsing ICE candidate:", err)
