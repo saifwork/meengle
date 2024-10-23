@@ -14,6 +14,9 @@ const (
 	ActionConnected    = "connected"
 	ActionDisConnected = "dis_connected"
 
+	ActionHangUpRes = "hang_up_res"
+	ActionHangUpRec = "hang_up_rec"
+
 	ActionOfferReq = "offer_req"
 	ActionOfferRes = "offer_res"
 

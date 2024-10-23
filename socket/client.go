@@ -81,6 +81,10 @@ type ClientDisconnect struct {
 	ID string `json:"uId"`
 }
 
+type ClientHangUp struct {
+	ID string `json:"uId"`
+}
+
 type MessageResponse struct {
 	Action  string      `json:"action"`
 	Message interface{} `json:"message"`
@@ -229,11 +233,21 @@ func (c *Client) ReadPump() {
 
 		case types.ActionDisConnected:
 
-			// var clientDisconnect ClientDisconnect
-			// if err := json.Unmarshal(msgReq.Data, &clientDisconnect); err != nil {
-			// 	log.Println("Error parsing ICE candidate:", err)
-			// 	continue
-			// }
+			var clientDisconnect ClientDisconnect
+			if err := json.Unmarshal(msgReq.Data, &clientDisconnect); err != nil {
+				log.Println("Error parsing ICE candidate:", err)
+				continue
+			}
+
+			if clientDisconnect.ID != "" {
+				c.handleMessageResponse(types.ActionHangUpRec, nil, clientDisconnect.ID)
+
+				// Caller Peer
+				client := c.hub.GetClientByID(clientDisconnect.ID)
+				if client != nil {
+					client.IsWaiting = true
+				}
+			}
 
 			c.hub.mu.Lock()
 
@@ -251,6 +265,27 @@ func (c *Client) ReadPump() {
 			c.hub.mu.Unlock()
 
 			log.Printf("Client Disconnect: %s", c.ID)
+
+		case types.ActionHangUpRes:
+
+			var clientHangUp ClientHangUp
+			if err := json.Unmarshal(msgReq.Data, &clientHangUp); err != nil {
+				log.Println("Error parsing Client HangUp :", err)
+				continue
+			}
+
+			c.handleMessageResponse(types.ActionHangUpRec, nil, clientHangUp.ID)
+
+			// Callie Peer
+			c.IsWaiting = true
+
+			// Caller Peer
+			client := c.hub.GetClientByID(clientHangUp.ID)
+			if client != nil {
+				client.IsWaiting = true
+			}
+
+			log.Printf("Status Updated for: %s - %s", c.ID, client.ID)
 
 		default:
 			log.Println("Unknown action:", msgReq.Action)
