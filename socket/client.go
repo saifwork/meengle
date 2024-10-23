@@ -268,11 +268,15 @@ func (c *Client) ReadPump() {
 
 		case types.ActionHangUpRes:
 
+			log.Println("inside ActionHangUpRes")
+
 			var clientHangUp ClientHangUp
 			if err := json.Unmarshal(msgReq.Data, &clientHangUp); err != nil {
 				log.Println("Error parsing Client HangUp :", err)
 				continue
 			}
+
+			log.Println(clientHangUp.ID)
 
 			c.handleMessageResponse(types.ActionHangUpRec, nil, clientHangUp.ID)
 
