@@ -235,7 +235,7 @@ func (c *Client) ReadPump() {
 
 			var clientDisconnect ClientDisconnect
 			if err := json.Unmarshal(msgReq.Data, &clientDisconnect); err != nil {
-				log.Println("Error parsing ICE candidate:", err)
+				log.Println("Error parsing clientDisconnect:", err)
 				continue
 			}
 

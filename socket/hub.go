@@ -248,7 +248,7 @@ func (h *Hub) cleanClients() {
 			for client, createdAt := range h.clients {
 				td := time.Since(createdAt).Seconds()
 				// Closing inactive clients stored since more than 60 secs
-				if td > 10000 {
+				if td > 60 {
 
 					mr := &MessageResponse{
 						Action:  types.ActionConnected,
