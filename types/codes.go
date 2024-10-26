@@ -17,6 +17,8 @@ const (
 	ActionHangUpRes = "hang_up_res"
 	ActionHangUpRec = "hang_up_rec"
 
+	ActionForceHangUpRes = "force_hang_up_res"
+
 	ActionOfferReq = "offer_req"
 	ActionOfferRes = "offer_res"
 

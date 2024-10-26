@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/saifwork/socket-service/configs"
@@ -42,12 +43,26 @@ func main() {
 	// Initializing the client pairing bot
 	go hub.PairWaitingClients()
 
-	p := config.ServicePort
 	h := config.ServiceHost
-	log.Printf("Serving at %s\n", fmt.Sprintf("%s:%s", h, p))
-	if err := r.Run(fmt.Sprintf("%s:%s", h, p)); err != nil {
-		log.Fatalf("Fail to start the server on %s:%s ", h, p)
+	p := config.ServicePort
+
+	isHttps, err := strconv.Atoi(config.ServiceHTTPS)
+	if err == nil && isHttps == 1 {
+		crt := os.Getenv("SERVICE_CERT")
+		key := os.Getenv("SERVICE_KEY")
+		log.Printf("Starting the HTTPS server on %s:%s", h, p)
+		err := r.RunTLS(fmt.Sprintf("%s:%s", h, p), crt, key)
+		if err != nil {
+			log.Fatalf("Error on starting the service: %v", err)
+		}
+	} else {
+		log.Printf("Starting the HTTP server on %s:%s", h, p)
+		err := r.Run(fmt.Sprintf("%s:%s", h, p))
+		if err != nil {
+			log.Fatalf("Error on starting the service: %v", err)
+		}
 	}
+
 }
 
 func HandleWebHookEvent(c *gin.Context) {

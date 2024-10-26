@@ -266,6 +266,28 @@ func (c *Client) ReadPump() {
 
 			log.Printf("Client Disconnect: %s", c.ID)
 
+		case types.ActionForceHangUpRes:
+
+			log.Println("inside ActionForceHangUpRes")
+
+			var clientHangUp ClientHangUp
+			if err := json.Unmarshal(msgReq.Data, &clientHangUp); err != nil {
+				log.Println("Error parsing Client HangUp :", err)
+				continue
+			}
+
+			log.Println(clientHangUp.ID)
+
+			c.handleMessageResponse(types.ActionHangUpRec, nil, clientHangUp.ID)
+
+			// Caller Peer
+			client := c.hub.GetClientByID(clientHangUp.ID)
+			if client != nil {
+				client.IsWaiting = true
+			}
+
+			log.Printf("Status Updated for: %s - %s", c.ID, client.ID)
+
 		case types.ActionHangUpRes:
 
 			log.Println("inside ActionHangUpRes")

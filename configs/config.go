@@ -8,10 +8,11 @@ import (
 )
 
 type Config struct {
-	ServiceName string
-	ServiceHost string
-	ServicePort string
-	Version string
+	ServiceName  string
+	ServiceHost  string
+	ServicePort  string
+	Version      string
+	ServiceHTTPS string
 }
 
 func NewConfig() *Config {
@@ -44,5 +45,10 @@ func (c *Config) initialise() {
 	if c.Version = os.Getenv("VERSION"); c.Version == "" {
 		log.Println("VERSION missed on the environment variables, setting default to '1.0.0'")
 		c.Version = "1.0.0"
+	}
+
+	if c.ServiceHTTPS = os.Getenv("SERVICE_HTTPS"); c.ServiceHTTPS == "" {
+		log.Println("SERVICE_HTTPS missed on the environment variables, setting default to 1")
+		c.ServiceHTTPS = "1"
 	}
 }
