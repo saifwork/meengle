@@ -32,5 +32,7 @@ const (
 	ActionStartChatReq = "start_chat_req"
 	ActionStartChatAck = "start_chat_ack"
 
+	ActionConnectedPeerReq = "action_connected_peer_req"
+
 	ActionActiveUsers = "active_users"
 )

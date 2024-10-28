@@ -42,7 +42,8 @@ var upgrader = websocket.Upgrader{
 }
 
 type User struct {
-	ID        string    `json:"uId"`       // Unique identifier for the user (could be a UUID)
+	ID        string    `json:"uId"` // Unique identifier for the user (could be a UUID)
+	PID       string    `json:"pId"`
 	Addr      string    `json:"addr"`      // Network address of the user (IP or WebSocket addr)
 	EnterAt   time.Time `json:"enterAt"`   // Timestamp when the user entered the waiting state
 	IsWaiting bool      `json:"isWaiting"` // Whether the user is in the waiting state for matchmaking
@@ -85,6 +86,10 @@ type ClientHangUp struct {
 	ID string `json:"uId"`
 }
 
+type ConnectedPeerReq struct {
+	PID string `json:"pId"`
+}
+
 type MessageResponse struct {
 	Action  string      `json:"action"`
 	Message interface{} `json:"message"`
@@ -118,6 +123,13 @@ func (c *Client) ReadPump() {
 		}
 		c.hub.unregister <- c
 		if c.conn != nil {
+
+			// Caller Peer
+			client := c.hub.GetClientByID(c.PID)
+			if client != nil {
+				client.IsWaiting = true
+				go c.handleMessageResponse(types.ActionHangUpRec, nil, c.PID)
+			}
 			_ = c.conn.Close()
 		}
 	}()
@@ -240,6 +252,8 @@ func (c *Client) ReadPump() {
 			}
 
 			if clientDisconnect.ID != "" {
+
+				log.Println("inside notifying client")
 				c.handleMessageResponse(types.ActionHangUpRec, nil, clientDisconnect.ID)
 
 				// Caller Peer
@@ -312,6 +326,17 @@ func (c *Client) ReadPump() {
 			}
 
 			log.Printf("Status Updated for: %s - %s", c.ID, client.ID)
+
+		case types.ActionConnxectedPeerReq:
+
+			log.Println("inside ActionConnectedPeerReq")
+
+			var connectedPeerReq ConnectedPeerReq
+			if err := json.Unmarshal(msgReq.Data, &connectedPeerReq); err != nil {
+				log.Println("Error parsing ConnectedPeerReq :", err)
+			}
+
+			c.PID = connectedPeerReq.PID
 
 		default:
 			log.Println("Unknown action:", msgReq.Action)
