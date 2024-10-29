@@ -126,9 +126,9 @@ func (c *Client) ReadPump() {
 
 			// Caller Peer
 			client := c.hub.GetClientByID(c.PID)
-			if client != nil {
+			if client != nil && client.PID == c.ID {
 				client.IsWaiting = true
-				go c.handleMessageResponse(types.ActionHangUpRec, nil, c.PID)
+				go c.handleMessageResponse(types.ActionHangUpRec, nil, client.ID)
 			}
 			_ = c.conn.Close()
 		}
@@ -327,7 +327,7 @@ func (c *Client) ReadPump() {
 
 			log.Printf("Status Updated for: %s - %s", c.ID, client.ID)
 
-		case types.ActionConnxectedPeerReq:
+		case types.ActionConnectedPeerReq:
 
 			log.Println("inside ActionConnectedPeerReq")
 
