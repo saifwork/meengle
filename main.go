@@ -14,8 +14,6 @@ import (
 	"github.com/saifwork/socket-service/socket"
 )
 
-// just restart
-
 func main() {
 
 	// Load the configurations
@@ -41,7 +39,9 @@ func main() {
 	})
 
 	// Initializing the client pairing bot
-	go hub.PairWaitingClients()
+	go hub.PairWaitingClients(socket.Chat)
+	go hub.PairWaitingClients(socket.AudioChat)
+	go hub.PairWaitingClients(socket.VideoChat)
 
 	h := config.ServiceHost
 	p := config.ServicePort

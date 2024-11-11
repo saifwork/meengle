@@ -125,7 +125,7 @@ func (h *Hub) GetWaitingClientByUID(uid string) *Client {
 	return nil // Return nil if no matching client is found
 }
 
-func (h *Hub) GetWaitingClients() []*Client {
+func (h *Hub) GetWaitingClients(cType ChatType) []*Client {
 
 	h.mu.Lock()         // Lock before accessing
 	defer h.mu.Unlock() // Unlock after
@@ -134,7 +134,7 @@ func (h *Hub) GetWaitingClients() []*Client {
 	for client := range h.clients {
 
 		log.Println(client)
-		if client.IsWaiting {
+		if client.IsWaiting && client.Type == cType {
 			waitingClients = append(waitingClients, client)
 		}
 	}
@@ -143,14 +143,14 @@ func (h *Hub) GetWaitingClients() []*Client {
 	return waitingClients
 }
 
-func (h *Hub) PairWaitingClients() {
+func (h *Hub) PairWaitingClients(cType ChatType) {
 
 	log.Println("Starting PairWaitingClients")
 
 	for {
 		time.Sleep(1 * time.Second) // Check every 5 seconds
 
-		waitingClients := h.GetWaitingClients() // Fetch waiting clients
+		waitingClients := h.GetWaitingClients(cType) // Fetch waiting clients
 
 		if len(waitingClients) < 2 {
 			continue // If less than two clients are waiting, wait for more

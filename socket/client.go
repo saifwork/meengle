@@ -41,12 +41,21 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+// ChatType represents the type of chat
+type ChatType string
+
+const (
+	Chat      ChatType = "chat"
+	AudioChat ChatType = "audiochat"
+	VideoChat ChatType = "videochat"
+)
+
 type User struct {
-	ID        string    `json:"uId"` // Unique identifier for the user (could be a UUID)
+	ID        string    `json:"uId"`
 	PID       string    `json:"pId"`
-	Addr      string    `json:"addr"`      // Network address of the user (IP or WebSocket addr)
-	EnterAt   time.Time `json:"enterAt"`   // Timestamp when the user entered the waiting state
-	IsWaiting bool      `json:"isWaiting"` // Whether the user is in the waiting state for matchmaking
+	EnterAt   time.Time `json:"enterAt"`
+	IsWaiting bool      `json:"isWaiting"`
+	Type      ChatType  `json:"type"`
 }
 
 type ClientMessage struct {
@@ -80,6 +89,10 @@ type IceCandidate struct {
 
 type ClientDisconnect struct {
 	ID string `json:"uId"`
+}
+
+type ChatReqType struct {
+	Type ChatType `json:"type"`
 }
 
 type ClientHangUp struct {
@@ -178,7 +191,15 @@ func (c *Client) ReadPump() {
 			c.send <- msg
 
 		case types.ActionStartChatReq:
+
+			var chatReqType ChatReqType
+			if err := json.Unmarshal(msgReq.Data, &chatReqType); err != nil {
+				log.Println("Error parsing chatReqType:", err)
+				continue
+			}
+
 			// Set the client as waiting
+			c.Type = chatReqType.Type
 			c.IsWaiting = true
 			log.Printf("Client %s is now waiting for a match", c.ID)
 
@@ -441,9 +462,6 @@ func ServeWebsockets(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	} else {
 		client.ID = GenUserId() // Call GenUserId() if uId is empty
 	}
-
-	log.Printf("[%s] DEBUG: Registering remote address", time.Now())
-	client.Addr = conn.RemoteAddr().String()
 
 	log.Printf("[%s] DEBUG: Registering time", time.Now())
 	client.EnterAt = time.Now()
