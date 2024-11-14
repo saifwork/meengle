@@ -136,15 +136,18 @@ func (c *Client) ReadPump() {
 		}
 		c.hub.unregister <- c
 		if c.conn != nil {
+			// Check if c.PID has a value before proceeding
 
-			// Caller Peer
-			client := c.hub.GetClientByID(c.PID)
-			if client != nil && client.PID == c.ID {
-				client.IsWaiting = true
-				go c.handleMessageResponse(types.ActionHangUpRec, nil, client.ID)
+			if c.PID != "" {
+				// Caller Peer
+				client := c.hub.GetClientByID(c.PID)
+				if client != nil && client.PID == c.ID {
+					client.IsWaiting = true
+					go c.handleMessageResponse(types.ActionHangUpRec, nil, client.ID)
+				}
 			}
 			_ = c.conn.Close()
-		}
+		}		
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	_ = c.conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -302,27 +305,34 @@ func (c *Client) ReadPump() {
 			log.Printf("Client Disconnect: %s", c.ID)
 
 		case types.ActionForceHangUpRes:
-
 			log.Println("inside ActionForceHangUpRes")
-
+		
 			var clientHangUp ClientHangUp
 			if err := json.Unmarshal(msgReq.Data, &clientHangUp); err != nil {
-				log.Println("Error parsing Client HangUp :", err)
+				log.Println("Error parsing Client HangUp:", err)
 				continue
 			}
-
-			log.Println(clientHangUp.ID)
-
+		
+			log.Println("ClientHangUp ID:", clientHangUp.ID)
+		
+			// c.IsWaiting = true
 			c.handleMessageResponse(types.ActionHangUpRec, nil, clientHangUp.ID)
-
+		
+			// Check if c.hub is not nil
+			if c.hub == nil {
+				log.Println("Error: c.hub is nil")
+				return
+			}
+		
 			// Caller Peer
 			client := c.hub.GetClientByID(clientHangUp.ID)
 			if client != nil {
 				client.IsWaiting = true
+				log.Printf("Status Updated for: %s - %s", c.ID, client.ID)
+			} else {
+				log.Printf("Error: Client with ID %s not found in hub", clientHangUp.ID)
 			}
-
-			log.Printf("Status Updated for: %s - %s", c.ID, client.ID)
-
+		
 		case types.ActionHangUpRes:
 
 			log.Println("inside ActionHangUpRes")
