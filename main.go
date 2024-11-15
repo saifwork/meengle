@@ -38,6 +38,11 @@ func main() {
 		socket.ServeWebsockets(hub, c.Writer, c.Request)
 	})
 
+	// Redirect route for the base URL
+	r.GET("/", func(c *gin.Context) {
+		c.Redirect(http.StatusFound, "https://meengle-f-build.vercel.app/")
+	})
+
 	// Initializing the client pairing bot
 	go hub.PairWaitingClients(socket.Chat)
 	go hub.PairWaitingClients(socket.AudioChat)
